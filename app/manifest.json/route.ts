@@ -1,0 +1,1 @@
+export async function GET(){ return new Response(JSON.stringify({name:'LancheFácil', short_name:'LancheFácil', start_url:'/', display:'standalone', background_color:'#fffaf5', theme_color:'#ea580c', icons:[{src:'/icon.png', sizes:'512x512', type:'image/png'}]}), {headers:{'Content-Type':'application/json'}}) }
