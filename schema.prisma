@@ -1,0 +1,152 @@
+
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+
+model Restaurant {
+  id String @id @default(cuid())
+  name String
+  slug String @unique
+  slogan String?
+  description String?
+  logo String?
+  coverImage String?
+  whatsapp String
+  phone String?
+  address String?
+  deliveryFee Float @default(5)
+  minOrder Float @default(15)
+  openingHours Json?
+  isActive Boolean @default(true)
+  plan String @default("basico") // basico, profissional, premium
+  seoTitle String?
+  seoDescription String?
+  ownerId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  categories Category[]
+  products Product[]
+  addons Addon[]
+  orders Order[]
+  coupons Coupon[]
+  users User[]
+
+  @@map("restaurants")
+}
+
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  password String
+  name String
+  role String @default("owner") // owner, admin, superadmin
+  restaurantId String?
+  restaurant Restaurant? @relation(fields: [restaurantId], references: [id])
+  createdAt DateTime @default(now())
+  @@map("users")
+}
+
+model Category {
+  id String @id @default(cuid())
+  restaurantId String
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name String
+  slug String
+  order Int @default(0)
+  isActive Boolean @default(true)
+  products Product[]
+  createdAt DateTime @default(now())
+  @@unique([restaurantId, slug])
+  @@map("categories")
+}
+
+model Product {
+  id String @id @default(cuid())
+  restaurantId String
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  categoryId String
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name String
+  description String?
+  price Float
+  image String?
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  orderItems OrderItem[]
+  @@map("products")
+}
+
+model Addon {
+  id String @id @default(cuid())
+  restaurantId String
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name String
+  price Float
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  @@map("addons")
+}
+
+model Order {
+  id String @id @default(cuid())
+  restaurantId String
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  customerName String
+  customerPhone String
+  address String
+  number String
+  neighborhood String
+  complement String?
+  reference String?
+  paymentMethod String // pix, dinheiro, cartao
+  changeFor Float?
+  subtotal Float
+  deliveryFee Float
+  discount Float @default(0)
+  total Float
+  status String @default("aguardando") // aguardando, recebido, preparando, saiu_para_entrega, concluido, cancelado
+  couponId String?
+  createdAt DateTime @default(now())
+  items OrderItem[]
+  @@map("orders")
+}
+
+model OrderItem {
+  id String @id @default(cuid())
+  orderId String
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product Product? @relation(fields: [productId], references: [id])
+  productName String
+  quantity Int
+  unitPrice Float
+  subtotal Float
+  addons OrderItemAddon[]
+  @@map("order_items")
+}
+
+model OrderItemAddon {
+  id String @id @default(cuid())
+  orderItemId String
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  addonName String
+  price Float
+  @@map("order_item_addons")
+}
+
+model Coupon {
+  id String @id @default(cuid())
+  restaurantId String
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  code String
+  type String // percentual, fixo
+  value Float
+  minValue Float?
+  expiresAt DateTime?
+  usageLimit Int?
+  usedCount Int @default(0)
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  @@unique([restaurantId, code])
+  @@map("coupons")
+}
